@@ -2,6 +2,7 @@
 import numpy as np
 import warnings
 import argparse
+
 warnings.filterwarnings("ignore")
 from keras.models import load_model
 from keras.optimizers import Adam
@@ -20,7 +21,6 @@ parser.add_argument('-bs', type=int, default=32,
 args, unk = parser.parse_known_args()
 if unk:
     warnings.warn("Unknown arguments:" + str(unk) + ".")
-
 
 # %% Import
 # Import data
