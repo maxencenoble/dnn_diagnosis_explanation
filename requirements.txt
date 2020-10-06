@@ -10,3 +10,4 @@ tqdm>=4.26
 xarray>=0.11.2
 seaborn>=0.9
 openpyxl
+matplotlib
