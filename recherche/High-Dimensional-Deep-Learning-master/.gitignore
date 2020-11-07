@@ -1,0 +1,27 @@
+.DS_Store
+BackPropagation/backpropagation-beatrice.ipynb
+ModLinHD.ipynb
+plop.py
+FunctionalDecomposition/utils/__pycache__/*
+AnomalyDetection/utils/__pycache__/*
+*__pychache__*
+.ipynb_checkpoints/
+AutoEncoder/github_cholet.py
+HumanActivityRecognition/utils/__init__.pyc
+HumanActivityRecognition/utils/illustration.pyc
+HumanActivityRecognition/utils/load.pyc
+HumanActivityRecognition/.ipynb_checkpoints/
+DonneesSimulees/.ipynb_checkpoints/
+HumanActivityRecognition/utils/__pycache__/
+ImageClassification/cats_transformation.png
+ImageClassification/data/subsample_200_Ntrain_80_Nval/preprocessing_example/
+ImageClassification/data/subsample_200_Ntrain_80_Nval/weights_model_VGG_fully_connected_model_10_epochs_20_batch_size.h5
+HAR_Guillo_Martin_5GMM.ipynb
+ECG Heratbeat Classification/Note.md
+ECG Heratbeat Classification/ecg.py
+ECG Heratbeat Classification/tools.py
+ECG Heartbeat Classification/kernel.ipynb
+ECG\ Heartbeat\ Classification/Note.md
+ECG Heartbeat Classification/Untitled.ipynb
+ECG Heartbeat Classification/mitbih_test_all.csv.zip
+HumanActivityRecognitionEnglish
