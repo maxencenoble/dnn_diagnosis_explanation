@@ -1,8 +1,5 @@
 import h5py
-import argparse
-import warnings
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 
@@ -11,7 +8,7 @@ import matplotlib.pyplot as plt
 def delete_zeros(ecg):
     """Delete the first and the last occurences of zero in the ecg"""
     temp = ecg[np.where(np.abs(np.array(ecg)) > 10 ** (-6))[0][0]:]
-    return temp[:np.where(np.abs(np.array(temp)) > 10 ** (-6))[-1][-1]]
+    return temp[:np.where(np.abs(np.array(temp)) > 10 ** (-6))[-1][-1]+1]
 
 
 def symetrize(ecg):
@@ -21,7 +18,6 @@ def symetrize(ecg):
 
 def symetrize_bounds(ecg):
     return np.append(ecg, ecg[0])
-
 
 # Fourier transformations of the ecg
 
