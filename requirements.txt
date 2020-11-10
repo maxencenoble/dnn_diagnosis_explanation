@@ -12,3 +12,4 @@ seaborn>=0.9
 openpyxl
 matplotlib
 ethik
+PyWavelets

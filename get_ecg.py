@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 
+
 LIST_OF_ALL_ECG = ["DI", "DII", "DIII", "AVL", "AVF", "AVR", "V1", "V2", "V3", "V4", "V5", "V6"]
 
 

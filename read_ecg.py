@@ -1,8 +1,5 @@
 import h5py
-import argparse
-import warnings
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 
@@ -21,7 +18,6 @@ def symetrize(ecg):
 
 def symetrize_bounds(ecg):
     return np.append(ecg, ecg[0])
-
 
 # Fourier transformations of the ecg
 
