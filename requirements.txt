@@ -13,3 +13,5 @@ openpyxl
 matplotlib
 ethik
 PyWavelets
+psutil
+requests

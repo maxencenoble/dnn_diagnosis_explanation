@@ -173,7 +173,7 @@ class ClassificationExplainer(CacheExplainer):
         targets=None,
         colors=None,
         dataset_color="black",
-        size=None,
+        size=None
     ):
         """Plot the stressed distribution of `feature_values` or `y_pred` if specified
         for each mean of `feature_values` in `targets`.
