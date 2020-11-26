@@ -25,6 +25,13 @@ DISEASE_DIC = {0: "Non malade",
                6: "ST"
                }
 
+DIC_SIZE_WAVELET = {0: 140,
+                    1: 140,
+                    2: 268,
+                    3: 523,
+                    4: 1033,
+                    5: 2054}
+
 ANNOTATIONS_CSV = np.genfromtxt("./data/annotations/dnn.csv", delimiter=',')[1:, 1:]
 ANNOTATIONS_CSV_pd = pd.read_csv("./data/annotations/dnn.csv", delimiter=',')
 
@@ -33,6 +40,155 @@ with h5py.File(TRACINGS_FILE, "r") as f:
     TABLE_ECG = np.array(f['tracings'])
 
 
+def get_coeff_multi_level(ecg, sigma_threshold=1., type_threshold='hard', family='sym7', level=5):
+    """Returns : list of arrays"""
+    coeffs = pywt.wavedec(ecg, family, level=level)
+    thresh = sigma_threshold * np.sqrt(2 * np.log(LEN))
+    for i in range(1, len(coeffs)):
+        coeffs[i] = pywt.threshold(coeffs[i], thresh, type_threshold)
+    return coeffs
+
+
+def reconstruct_signal(coeffsth, family='sym7'):
+    """Returns : np.array """
+    return pywt.waverec(coeffsth, family)
+
+
+def error(real_ecg, rec_ecg):
+    return np.mean((real_ecg - rec_ecg) * (real_ecg - rec_ecg))
+
+
+def get_indices_list_above_threshold(type_ecg=0,
+                                     sigma_threshold=1.,
+                                     threshold_coeff=0.01,
+                                     type_threshold='hard',
+                                     family='sym7',
+                                     level=5):
+    """ Returns the indices of the coeffs with avg(abs)>threshold
+    format : list of arrays (coeffs)
+             list of arrays (names)
+    """
+    all_coeffs = np.array(
+        [get_coeff_multi_level(TABLE_ECG[patient_id, :, type_ecg], sigma_threshold, type_threshold, family,
+                               level=level) for patient_id
+         in range(NB_PATIENT)])
+    liste_indices = []
+    liste_names = ["e" + str(type_ecg) + "_sc" + str(i) for i in range(DIC_SIZE_WAVELET[0])]
+    for i in range(1, level + 1):
+        abs_mean = np.abs(np.mean(all_coeffs[:, i]))
+        selected = np.where(abs_mean >= threshold_coeff)
+        liste_indices.append(selected)
+        liste_names += ["e" + str(type_ecg) + "_l" + str(level - i + 1) + "_c" + str(indice) for indice in selected[0]]
+    return liste_indices, liste_names
+
+
+def from_array_coeffs_to_coeffs_with_zeros(array_coeffs, liste_indices_non_zero):
+    """ Returns the list of wavelet coeffs with threshold applied :
+        - array_coeffs = np.array(140 + taille coeffs non nuls ecg après threshold)
+        - liste_indices_non_zero = obtenu avec get_indices_list_above threshold
+    format : list of arrays
+    """
+    coeffs_wavelet = []
+    coeffs_wavelet.append(array_coeffs[:DIC_SIZE_WAVELET[0]])
+    array_coeffs = array_coeffs[DIC_SIZE_WAVELET[0]:]
+    for i in range(1, 6):
+        array_coeffs_i = np.zeros(DIC_SIZE_WAVELET[i])
+        array_coeffs_i[liste_indices_non_zero[i - 1]] = array_coeffs[:len(liste_indices_non_zero[i - 1][0])]
+        array_coeffs = array_coeffs[len(liste_indices_non_zero[i - 1][0]):]
+        coeffs_wavelet.append(array_coeffs_i)
+    return coeffs_wavelet
+
+
+def from_ecg_to_array_coeffs(ecg,
+                             liste_indices_non_zero,
+                             sigma_threshold=1.,
+                             type_threshold='hard',
+                             family='sym7',
+                             level=5):
+    """liste_indices_non_zero obtenu avec get_indices_list_above_threshold[0]"""
+    coeffs = get_coeff_multi_level(ecg, sigma_threshold, type_threshold, family, level=level)
+    all_coeffs = [coeffs[0]]
+    for i in range(1, 6):
+        all_coeffs.append(coeffs[i][liste_indices_non_zero[i - 1]])
+    return np.concatenate(all_coeffs)
+
+
+def turn_ecg_into_coeffs(type_disease,
+                         threshold_coeff=0.03,
+                         sigma_threshold=1.,
+                         type_threshold='hard',
+                         family='sym7',
+                         level=5
+                         ):
+    """Returns :
+    - data : array (827 x nb_coeffs_selected per type ECG with concatenation)
+    - target : array 827 (label de type_disease)
+    - feature_names : array (len : sum nb_coeffs_selected all type ECG)
+    - target_names : array (len : 2)"""
+
+    liste_all_names = []
+    liste_coeffs_features = [[] for i in range(NB_PATIENT)]
+    list_nb_coeffs = []
+    list_non_zero = []
+    for type_ecg in range(12):
+        liste_indices_non_zero_0, liste_names = get_indices_list_above_threshold(type_ecg=type_ecg,
+                                                                                 threshold_coeff=threshold_coeff,
+                                                                                 sigma_threshold=sigma_threshold,
+                                                                                 type_threshold=type_threshold,
+                                                                                 family=family,
+                                                                                 level=level)
+        liste_all_coeff = np.array([from_ecg_to_array_coeffs(TABLE_ECG[id, :, type_ecg], liste_indices_non_zero_0,
+                                                             sigma_threshold=sigma_threshold,
+                                                             type_threshold=type_threshold,
+                                                             family=family,
+                                                             level=level
+                                                             ) for id in range(NB_PATIENT)])
+        list_nb_coeffs.append(np.shape(liste_all_coeff)[1])
+        list_non_zero.append(liste_indices_non_zero_0)
+
+        liste_coeffs_features = np.concatenate((liste_coeffs_features, liste_all_coeff), axis=1)
+
+        liste_all_names = np.concatenate((liste_all_names, liste_names))
+
+    res = {'data': liste_coeffs_features,
+           'target': ANNOTATIONS_CSV_pd[type_disease].values,
+           'feature_names': liste_all_names,
+           'target_names': np.array(['sain', 'malade']),
+           'nb_coeffs_per_type_ecg': list_nb_coeffs,
+           'liste_indices_non_zero_0_per_type_ecg': list_non_zero}
+    return res
+
+
+def turn_coeffs_into_ecg(res_coeffs, family='sym7'):
+    list_nb_coeffs = res_coeffs['nb_coeffs_per_type_ecg']
+    all_coeffs = res_coeffs['data']
+    list_non_zero = res_coeffs['liste_indices_non_zero_0_per_type_ecg']
+    res_signal = []
+    for id in range(np.shape(all_coeffs)[0]):
+        signal_patient = []
+        coeffs = all_coeffs[id]
+        for j in range(12):
+            signal_patient.append(
+                reconstruct_signal(from_array_coeffs_to_coeffs_with_zeros(coeffs[:list_nb_coeffs[j]], list_non_zero[j]),
+                                   family=family))
+        signal_patient = np.array(signal_patient).T
+        res_signal.append(signal_patient)
+    return np.array(res_signal)
+
+
+#res_coeffs = turn_ecg_into_coeffs(DISEASE_DIC[1], threshold_coeff=0.005)
+#signal = turn_coeffs_into_ecg(res_coeffs)
+
+#coeffs = res_coeffs["data"][0]
+# print(coeffs[coeffs>0])
+#for j in range(12):
+    #plt.plot(TABLE_ECG[12, :, j], label="true")
+    #plt.plot(signal[12, :, j], label="new")
+    #plt.legend()
+    #plt.show()
+
+
+# pca wavelet
 def pca_visualisation_wavelet(id_ecg=0,
                               family='db5',
                               level=5,
@@ -104,6 +260,7 @@ def pca_visualisation_wavelet(id_ecg=0,
     plt.show()
 
 
+# pca fft
 def pca_visualisation_fft(id_ecg=0, sigma=1.0):
     """Affiche plusieurs graphes:
         - distribution du nb de coeffs non nuls (brut et taux)
@@ -173,6 +330,7 @@ def pca_visualisation_fft(id_ecg=0, sigma=1.0):
 
 
 if __name__ == "__main__":
+
     if len(sys.argv) < 4:
         print('Parameters : type_decomposition id_ecg sigma [family level type_threshold]')
     else:

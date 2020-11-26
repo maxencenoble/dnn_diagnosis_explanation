@@ -13,3 +13,7 @@ openpyxl
 matplotlib
 ethik
 PyWavelets
+lime
+IPython
+keras-vis
+opencv-python
