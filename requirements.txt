@@ -15,3 +15,7 @@ ethik
 PyWavelets
 psutil
 requests
+lime
+IPython
+keras-vis
+opencv-python
