@@ -2,6 +2,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
+from dtw import accelerated_dtw
 import pandas as pd
 
 import get_ecg as ge
@@ -68,8 +69,10 @@ def entropy(list_ecg, numbins=100, base=None):
 def auto_correlation(list_ecg, lag=10):
     return np.correlate(list_ecg, list_ecg, "same")[lag]
 
+
 def auto_correlation_function(lag):
-    return lambda list_ecg : np.abs(auto_correlation(list_ecg,lag))
+    return lambda list_ecg: np.abs(auto_correlation(list_ecg, lag))
+
 
 def kurtosis(ecg):
     return stats.kurtosis(ecg)
@@ -101,3 +104,31 @@ def average_kurtosis(list_ecg):
 
 def average_skewness(list_ecg):
     return np.mean(np.array([stats.skew(list_ecg[k]) for k in range(12)]))
+
+
+def average_asynchrony(list_ecg, ecg_comparaison, plot=False):
+    """Compared to some ecg_comparaison"""
+
+    d2 = ecg_comparaison.reshape(-1, 1)
+    res = 0
+    for k in range(12):
+        d1 = list_ecg[k].reshape(-1, 1)
+        d, cost_matrix, acc_cost_matrix, path = accelerated_dtw(d1, d2, dist='euclidean')
+        res += np.sum((path[1] - path[0]) / 16000)
+        if plot:
+            figure = plt.figure(figsize=(10, 10))
+            ax1 = figure.add_subplot(2, 1, 1)
+            ax1.imshow(acc_cost_matrix.T, origin='lower', cmap='gray', interpolation='nearest')
+            ax1.plot(path[0], path[1], 'w')
+            ax1.set_xlabel('ECG 0')
+            ax1.set_ylabel('ECG 1')
+            ax1.set_title(f'DTW Minimum Path with minimum distance: {np.round(d, 2)}')
+
+            ax2 = figure.add_subplot(2, 1, 2)
+            ax2.plot(list_ecg[0], label="ecg0")
+            ax2.plot(list_ecg[1], label="ecg1")
+            ax2.set_title("Comparaison des ECG")
+            ax2.legend()
+
+            plt.show()
+    return res / 12

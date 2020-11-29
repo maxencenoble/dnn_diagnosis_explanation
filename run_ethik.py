@@ -152,6 +152,8 @@ def plot_mono_feature_influence_dnn(
     return 0
 
 
+# plot_mono_feature_influence_dnn(ft.average, patho_list=['1dAVb'])
+
 """Function which takes a poly_feature and plots its influence
 Variables :
     - feat_function : a function from features.py, such as ft.average_std
@@ -366,10 +368,181 @@ def plot_poly_feature_influence_gold(
     return 0
 
 
+def average_asynchrony_0(list_ecg):
+    return ft.average_asynchrony(list_ecg, ecg_comparaison=table_ecg[0, 0])
+
+
 mono_features = [ft.average, ft.standard_deviation, ft.median_absolute_value, ft.maximum, ft.minimum,
                  ft.signal_magnitude_area, ft.energy, ft.interquartile_range, ft.entropy,
                  ft.kurtosis, ft.skewness]
 poly_features = [ft.average_mean, ft.average_std, ft.average_skewness, ft.average_kurtosis]
+
+
+def explain_mono_feature_influence(pathology, mono_features_list=mono_features, tau_lim=0.7):
+    feature_list = []
+    type_ecg = []
+    proba_mean_dnn = []
+    proba_low_dnn = []
+    proba_high_dnn = []
+    proba_mean_gs = []
+    proba_low_gs = []
+    proba_high_gs = []
+
+    for feat_function in mono_features_list:
+        """Computes the feature values matrix"""
+        feature_values = np.empty((N_patients, 12))
+        for id in range(N_patients):
+            feature_values[id] = np.array([feat_function(table_ecg[id][lead]) for lead in range(12)])
+
+        """extracts the name of the function"""
+        function_name = str(feat_function)[10:]
+        i = 0
+        while function_name[i] != " ":
+            i += 1
+        function_name = function_name[:i]
+
+        """Build the feature name list"""
+        names = ["lead_" + str(k) for k in range(12)]
+
+        """Build the feature dataframe"""
+        series = {
+            names[0]: feature_values[:, 0],
+            names[1]: feature_values[:, 1],
+            names[2]: feature_values[:, 2],
+            names[3]: feature_values[:, 3],
+            names[4]: feature_values[:, 4],
+            names[5]: feature_values[:, 5],
+            names[6]: feature_values[:, 6],
+            names[7]: feature_values[:, 7],
+            names[8]: feature_values[:, 8],
+            names[9]: feature_values[:, 9],
+            names[10]: feature_values[:, 10],
+            names[11]: feature_values[:, 11]
+        }
+        df_feature = pd.DataFrame(series)
+
+        explanation_dnn = explainer.explain_influence(
+            X_test=df_feature[
+                [names[0], names[1], names[2], names[3], names[4], names[5], names[6], names[7], names[8], names[9],
+                 names[10], names[11]]],
+            y_pred=dnn_annotations[pathology])
+        explanation_gold_standard = explainer.explain_influence(
+            X_test=df_feature[
+                [names[0], names[1], names[2], names[3], names[4], names[5], names[6], names[7], names[8], names[9],
+                 names[10], names[11]]],
+            y_pred=gold_standard[pathology])
+
+        features = explanation_dnn["feature"].unique()
+        for i, feat in enumerate(features):
+            type_ecg.append(feat)
+            feature_list.append(function_name)
+            taus = explanation_dnn.query(f'feature == "{feat}"')["tau"].values
+            y_dnn = explanation_dnn.query(f'feature == "{feat}"')["influence"].values
+            y_gold_standard = explanation_gold_standard.query(f'feature == "{feat}"')["influence"].values
+            p_mean_dnn = round(y_dnn[np.where(taus == 0.)][0], 3)
+            p_high_dnn = round((y_dnn[np.where(taus == -tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_low_dnn = round((y_dnn[np.where(taus == tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_mean_gs = round(y_gold_standard[np.where(taus == 0.)][0], 3)
+            p_high_gs = round((y_gold_standard[np.where(taus == -tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            p_low_gs = round((y_gold_standard[np.where(taus == tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            proba_high_dnn.append(p_high_dnn)
+            proba_low_dnn.append(p_low_dnn)
+            proba_mean_dnn.append(p_mean_dnn)
+            proba_high_gs.append(p_high_gs)
+            proba_low_gs.append(p_low_gs)
+            proba_mean_gs.append(p_mean_gs)
+
+    df = pd.DataFrame({"Feature": feature_list,
+                       "ECG": type_ecg,
+                       "DNN - Avg P": proba_mean_dnn,
+                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
+                       "DNN - Ecart relatif en +" + str(tau_lim): proba_high_dnn,
+                       "GS - Avg P": proba_mean_gs,
+                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
+                       "GS - Ecart relatif en +" + str(tau_lim): proba_high_gs,
+                       })
+
+    return df.set_index(["ECG", "Feature"])
+
+
+# save files as xlsx
+#for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+#    print(disease)
+#    explanation = explain_mono_feature_influence(disease)
+#    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + ".xlsx")
+
+
+def explain_poly_feature_influence(pathology, mono_features_list=poly_features, tau_lim=0.7):
+    feature_list = []
+    proba_mean_dnn = []
+    proba_low_dnn = []
+    proba_high_dnn = []
+    proba_mean_gs = []
+    proba_low_gs = []
+    proba_high_gs = []
+
+    for feat_function in mono_features_list:
+        """Computes the feature values matrix"""
+        feature_values = np.zeros(N_patients)
+        for id in range(N_patients):
+            feature_values[id] = feat_function(table_ecg[id])
+
+        """extracts the name of the function"""
+        function_name = str(feat_function)[10:]
+        i = 0
+        while function_name[i] != " ":
+            i += 1
+        function_name = function_name[:i]
+
+        """Builds the feature dataframe"""
+        series = {
+            function_name: feature_values
+        }
+        df_feature = pd.DataFrame(series)
+
+        explanation_dnn = explainer.explain_influence(
+            X_test=df_feature[function_name],
+            y_pred=dnn_annotations[pathology])
+        explanation_gold_standard = explainer.explain_influence(
+            X_test=df_feature[function_name],
+            y_pred=gold_standard[pathology])
+
+        features = explanation_dnn["feature"].unique()
+        for i, feat in enumerate(features):
+            feature_list.append(function_name)
+            taus = explanation_dnn.query(f'feature == "{feat}"')["tau"].values
+            y_dnn = explanation_dnn.query(f'feature == "{feat}"')["influence"].values
+            y_gold_standard = explanation_gold_standard.query(f'feature == "{feat}"')["influence"].values
+            p_mean_dnn = round(y_dnn[np.where(taus == 0.)][0], 3)
+            p_high_dnn = round((y_dnn[np.where(taus == -tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_low_dnn = round((y_dnn[np.where(taus == tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_mean_gs = round(y_gold_standard[np.where(taus == 0.)][0], 3)
+            p_high_gs = round((y_gold_standard[np.where(taus == -tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            p_low_gs = round((y_gold_standard[np.where(taus == tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            proba_high_dnn.append(p_high_dnn)
+            proba_low_dnn.append(p_low_dnn)
+            proba_mean_dnn.append(p_mean_dnn)
+            proba_high_gs.append(p_high_gs)
+            proba_low_gs.append(p_low_gs)
+            proba_mean_gs.append(p_mean_gs)
+
+    df = pd.DataFrame({"Feature": feature_list,
+                       "DNN - Avg P": proba_mean_dnn,
+                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
+                       "DNN - Ecart relatif en +" + str(tau_lim): proba_high_dnn,
+                       "GS - Avg P": proba_mean_gs,
+                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
+                       "GS - Ecart relatif en +" + str(tau_lim): proba_high_gs,
+                       })
+
+    return df.set_index(["Feature"])
+
+
+# save files as xlsx
+for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+    print(disease)
+    explanation = explain_poly_feature_influence(disease)
+    explanation.to_excel("affichage_ecg/poly_feature_explanation_" + disease + ".xlsx")
 
 
 def save_all_mono_feature_influences_dnn():
@@ -412,12 +585,21 @@ save_all_mono_feature_influences_gold()
 save_all_poly_feature_influences_gold()
 """
 
-plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=340),
-                                name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
-plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=200),
-                                name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
+# print(ft.asynchrony(table_ecg[10, 2:4], plot=True))
 
-plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=340),
-                                 name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
-plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=200),
-                                 name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
+
+# plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=340),
+#                                name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
+# plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=200),
+#                                name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
+#
+# plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=340),
+#                                 name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
+# plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=200),
+#                                 name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
+
+
+# plot_poly_feature_influence_dnn(lambda list_ecg: ft.average_asynchrony(list_ecg, ecg_comparaison=table_ecg[0, 0]),
+#                                name_of_function='asynchrony ECG 0 et 1')
+
+# print(ft.average_asynchrony(table_ecg[0], ecg_comparaison=table_ecg[0, 0]))
