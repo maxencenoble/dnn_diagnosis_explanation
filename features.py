@@ -9,23 +9,10 @@ import pandas as pd
 import get_ecg as ge
 import read_ecg as re
 
-"""
-This file is for implementing all feature functions.
-"""
+"""This file is for implementing all feature functions"""
 
-"""
-Mono-features : functions which take a single tracing as an np.array and return a single float :
 
-Median Absolute Value (X) = median(|X-E(X)|), more robust to outliers than std
-Signal magnitude area = sum for a discrete signal
-Energy = average sum of the squares
-Interquartile range = the difference between 75th and 25th percentiles, aka between the upper and lower quartiles
-Entropy = Shannon entropy of the value histogram of the signal = sum_p -p log(p)
-Spectral entropy ? = Shannon entropy of the value histogram of the frequency spectrum
-Auto_correlation : correlation between the signal and itself offsetted by 'lag'
-Skewness : Skewness is the standardized moment of order three. For normally distributed data, the skewness should be about zero. A skewness value greater than zero means that there is more weight in the right tail of the distribution.
-Kurtosis : Kurtosis is the standardized moment of order four.
-"""
+"""Mono-features : functions which take a single tracing as an np.array and return a single float"""
 
 
 def average(list_ecg):
@@ -67,14 +54,6 @@ def entropy(list_ecg, numbins=100, base=None):
     return stats.entropy(stats.relfreq(list_ecg, numbins).frequency, None, base)
 
 
-def auto_correlation(list_ecg, lag=10):
-    return np.correlate(list_ecg, list_ecg, "same")[lag]
-
-
-def auto_correlation_function(lag):
-    return lambda list_ecg: np.abs(auto_correlation(list_ecg, lag))
-
-
 def kurtosis(ecg):
     return stats.kurtosis(ecg)
 
@@ -106,12 +85,13 @@ def frequencies_via_fft(ecg):
     freq = np.fft.fftfreq(signal_length, 1 / 400)
     return int(60*np.abs(freq[np.argmax(np.abs(fft))]))  # the number of steps
 
-"""Poly-features : functions which take all tracing as an (12,_) np.array and return a single float
+def auto_correlation(list_ecg):
+    """Computes the auto_correlation of an ecg lead with the lag corresponding to the heartbeat frequency"""
+    lag = periods_via_fft(list_ecg)
+    return np.correlate(list_ecg, list_ecg, "same")[lag]
 
-Average mean
-Average standard deviation
-Average 
-"""
+
+"""Poly-features : functions which take all tracing as an (12,_) np.array and return a single float"""
 
 
 def average_mean(list_ecg):

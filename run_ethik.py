@@ -70,17 +70,16 @@ table_ecg9 = table_ecg[:, 9]
 table_ecg10 = table_ecg[:, 10]
 table_ecg11 = table_ecg[:, 11]
 
-"""Function which takes a mono_feature and plots its influence
-Variables :
-    - feat_function : a function from features.py, such as ft.feature_avg
-    - patho_list : subset of ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], defaults to ['1dAVb']
-    - save : boolean, displays plot on save=0, auto-saves on save=1 """
-
 
 def plot_mono_feature_influence_dnn(
         feat_function, patho_list=['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], max_range=0.1,
         name_of_function='default', save=0
 ):
+    """Plots or save the Ethik influence of feat_function on pathology prediction by the DNN for pathologies in patho_list for every lead in the ECG.
+    One can choose the upper bound of the drawing with max_range, as well as the name of the function to display in the title with name_of_function.
+    Plots on save=0, saves on save=1
+    """
+
     """Computes the feature values matrix"""
     feature_values = np.empty((N_patients, 12))
     for id in range(N_patients):
@@ -152,19 +151,15 @@ def plot_mono_feature_influence_dnn(
     return 0
 
 
-# plot_mono_feature_influence_dnn(ft.average, patho_list=['1dAVb'])
-
-"""Function which takes a poly_feature and plots its influence
-Variables :
-    - feat_function : a function from features.py, such as ft.average_std
-    - patho_list : subset of ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], defaults to all
-    - save : boolean, displays plot on save=0, auto-saves on save=1 """
-
-
 def plot_poly_feature_influence_dnn(
         feat_function, patho_list=['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], max_range=0.1,
         name_of_function='default', save=0
 ):
+    """Plots or save the Ethik influence of feat_function on pathology prediction by the DNN for pathologies in patho_list the 12-lead ECG.
+    One can choose the upper bound of the drawing with max_range, as well as the name of the function to display in the title with name_of_function.
+    Plots on save=0, saves on save=1
+    """
+
     """Computes the feature values matrix"""
     feature_values = np.zeros(N_patients)
     for id in range(N_patients):
@@ -217,28 +212,15 @@ def plot_poly_feature_influence_dnn(
     return 0
 
 
-"""
-PLOTS : 
-
-Reminders :
-
-plot_mono_feature_influence(feat_function, patho_list=['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], max_range=0.1, save=0)
-plot_poly_feature_influence(feat_function, patho_list=['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], max_range=0.1, save=0)
-patho_list : subset of ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], defaults to all
-
-"""
-
-"""Function which takes a mono_feature and plots its influence in the gold standard
-Variables :
-    - feat_function : a function from features.py, such as ft.feature_avg
-    - patho_list : subset of ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], defaults to ['1dAVb']
-    - save : boolean, displays plot on save=0, auto-saves on save=1 """
-
-
 def plot_mono_feature_influence_gold(
         feat_function, patho_list=['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], max_range=0.1,
         name_of_function='default', save=0
 ):
+    """Plots or save the Ethik influence of feat_function on pathology prediction by the Gold Standard for pathologies in patho_list for every lead in the ECG.
+    One can choose the upper bound of the drawing with max_range, as well as the name of the function to display in the title with name_of_function.
+    Plots on save=0, saves on save=1
+    """
+
     """Computes the feature values matrix"""
     feature_values = np.empty((N_patients, 12))
     for id in range(N_patients):
@@ -306,17 +288,15 @@ def plot_mono_feature_influence_gold(
     return 0
 
 
-"""Function which takes a poly_feature and plots its influence in the gold standard
-Variables :
-    - feat_function : a function from features.py, such as ft.average_std
-    - patho_list : subset of ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], defaults to all
-    - save : boolean, displays plot on save=0, auto-saves on save=1 """
-
-
 def plot_poly_feature_influence_gold(
         feat_function, patho_list=['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST'], max_range=0.1,
         name_of_function='default', save=0
 ):
+    """Plots or save the Ethik influence of feat_function on pathology prediction by the Gold Standard for pathologies in patho_list the 12-lead ECG.
+    One can choose the upper bound of the drawing with max_range, as well as the name of the function to display in the title with name_of_function.
+    Plots on save=0, saves on save=1
+    """
+
     """Computes the feature values matrix"""
     feature_values = np.zeros(N_patients)
     for id in range(N_patients):
@@ -368,14 +348,50 @@ def plot_poly_feature_influence_gold(
     return 0
 
 
-def average_asynchrony_0(list_ecg):
-    return ft.average_asynchrony(list_ecg, ecg_comparaison=table_ecg[0, 0])
-
-
 mono_features = [ft.average, ft.standard_deviation, ft.median_absolute_value, ft.maximum, ft.minimum,
                  ft.signal_magnitude_area, ft.energy, ft.interquartile_range, ft.entropy,
-                 ft.kurtosis, ft.skewness]
+                 ft.kurtosis, ft.skewness, ft.periods_via_fft, ft.frequencies_via_fft, ft.auto_correlation]
 poly_features = [ft.average_mean, ft.average_std, ft.average_skewness, ft.average_kurtosis]
+
+
+"""Saving all the tracings"""
+
+def save_all_mono_feature_influences_dnn():
+    for feat in mono_features:
+        plot_mono_feature_influence_dnn(feat, save=1)
+    return 0
+
+
+def save_all_poly_feature_influences_dnn():
+    for feat in poly_features:
+        plot_poly_feature_influence_dnn(feat, save=1)
+    return 0
+
+
+def save_all_mono_feature_influences_gold():
+    for feat in mono_features:
+        plot_mono_feature_influence_gold(feat, save=1)
+    return 0
+
+
+def save_all_poly_feature_influences_gold():
+    for feat in poly_features:
+        plot_poly_feature_influence_gold(feat, save=1)
+    return 0
+
+
+save_all_mono_feature_influences_dnn()
+save_all_poly_feature_influences_dnn()
+
+save_all_mono_feature_influences_gold()
+save_all_poly_feature_influences_gold()
+
+
+"""Saving the influence rankings as Excel files"""
+
+
+def average_asynchrony_0(list_ecg):
+    return ft.average_asynchrony(list_ecg, ecg_comparaison=table_ecg[0, 0])
 
 
 def explain_mono_feature_influence(pathology, mono_features_list=mono_features, tau_lim=0.7):
@@ -466,7 +482,7 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
 
 
 # save files as xlsx
-#for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
 #    print(disease)
 #    explanation = explain_mono_feature_influence(disease)
 #    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + ".xlsx")
@@ -537,61 +553,11 @@ def explain_poly_feature_influence(pathology, mono_features_list=poly_features, 
 
     return df.set_index(["Feature"])
 
-
 # save files as xlsx
-#for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
 #    print(disease)
 #    explanation = explain_poly_feature_influence(disease)
 #    explanation.to_excel("affichage_ecg/poly_feature_explanation_" + disease + ".xlsx")
-
-
-def save_all_mono_feature_influences_dnn():
-    plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=340),
-                                    name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
-    plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=200),
-                                    name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
-    for feat in mono_features:
-        plot_mono_feature_influence_dnn(feat, save=1)
-    return 0
-
-
-def save_all_poly_feature_influences_dnn():
-    for feat in poly_features:
-        plot_poly_feature_influence_dnn(feat, save=1)
-    return 0
-
-
-def save_all_mono_feature_influences_gold():
-    plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=340),
-                                     name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
-    plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=200),
-                                     name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
-    for feat in mono_features:
-        plot_mono_feature_influence_gold(feat, save=1)
-    return 0
-
-
-def save_all_poly_feature_influences_gold():
-    for feat in poly_features:
-        plot_poly_feature_influence_gold(feat, save=1)
-    return 0
-
-
-"""
-save_all_mono_feature_influences_dnn()
-save_all_poly_feature_influences_dnn()
-
-save_all_mono_feature_influences_gold()
-save_all_poly_feature_influences_gold()
-"""
-
-plot_mono_feature_influence_dnn(ft.frequencies_via_fft, max_range=0.2, save=0)
-
-plot_mono_feature_influence_gold(ft.frequencies_via_fft, max_range=0.2, save=0)
-
-#plot_poly_feature_influence_dnn(ft.frequency_via_fft, max_range=0.2, save=0)
-
-#plot_poly_feature_influence_gold(ft.frequency_via_fft, max_range=0.2, save=0)
 
 
 # print(ft.asynchrony(table_ecg[10, 2:4], plot=True))
