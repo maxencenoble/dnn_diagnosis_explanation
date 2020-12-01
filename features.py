@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 from dtw import accelerated_dtw
+import scipy.signal
 import pandas as pd
 
 import get_ecg as ge
@@ -82,6 +83,29 @@ def skewness(ecg):
     return stats.skew(ecg)
 
 
+def periods_via_fft(ecg):
+    """Takes a single lead ecg and returns the most probable heartbeat period in number of steps (1 step = 1/400 s)"""
+    """Compute the Butterworth filter"""
+    butter_a, butter_b = scipy.signal.butter(N=2, Wn=[50 / 60, 120 / 60], btype='bandpass', analog=False, output='ba',
+                                             fs=400)
+    filtered_ecg = scipy.signal.lfilter(butter_a, butter_b, ecg)
+    signal_length = np.size(ecg)
+    fft = np.fft.fft(filtered_ecg)
+    freq = np.fft.fftfreq(signal_length, 1 / 400)
+    return int(400 / np.abs(freq[np.argmax(np.abs(fft))]))  # the number of steps
+
+
+def frequencies_via_fft(ecg):
+    """Takes a single lead ecg and returns the most probable heartbeat frequency in bpm (1 step = 1/400 s)"""
+    """Compute the Butterworth filter"""
+    butter_a, butter_b = scipy.signal.butter(N=2, Wn=[50 / 60, 120 / 60], btype='bandpass', analog=False, output='ba',
+                                             fs=400)
+    filtered_ecg = scipy.signal.lfilter(butter_a, butter_b, ecg)
+    signal_length = np.size(ecg)
+    fft = np.fft.fft(filtered_ecg)
+    freq = np.fft.fftfreq(signal_length, 1 / 400)
+    return int(60*np.abs(freq[np.argmax(np.abs(fft))]))  # the number of steps
+
 """Poly-features : functions which take all tracing as an (12,_) np.array and return a single float
 
 Average mean
@@ -104,6 +128,44 @@ def average_kurtosis(list_ecg):
 
 def average_skewness(list_ecg):
     return np.mean(np.array([stats.skew(list_ecg[k]) for k in range(12)]))
+
+
+def period_via_fft(ecg_list):
+    """Takes a 12-lead ecg and returns the most probable heartbeat period in number of steps (1 step = 1/400 s)
+    To do so it takes the frequency of maximum amplitude in the Fourier spectrum of each lead after passing it through
+    a Butterworth filter of order 2 of bandpass [50 bpm, 120 bpm], then takes the frequency which appears the most
+    across all leads"""
+    potential_periods = []
+    butter_a, butter_b = scipy.signal.butter(N=2, Wn=[50 / 60, 120 / 60], btype='bandpass', analog=False, output='ba',
+                                             fs=400)
+    for k in range(12):
+        filtered_ecg = scipy.signal.lfilter(butter_a, butter_b, ecg_list[k])
+        signal_length = np.size(ecg_list[k])
+        fft_k = np.fft.fft(filtered_ecg)
+        freq_k = np.fft.fftfreq(signal_length, 1 / 400)
+        resu = int(400 / np.abs(freq_k[np.argmax(np.abs(fft_k))]))
+        """converts frequency in Hz -> period in number of steps"""
+        potential_periods.append(resu)
+    return max(potential_periods, key=potential_periods.count)
+
+
+def frequency_via_fft(ecg_list):
+    """Takes a 12-lead ecg and returns the most probable heartbeat frequency in bpm (1 step = 1/400 s)
+    To do so it takes the frequency of maximum amplitude in the Fourier spectrum of each lead after passing it through
+    a Butterworth filter of order 2 of bandpass [50 bpm, 120 bpm], then takes the frequency which appears the most
+    across all leads"""
+    potential_frequencies = []
+    butter_a, butter_b = scipy.signal.butter(N=2, Wn=[50 / 60, 120 / 60], btype='bandpass', analog=False, output='ba',
+                                             fs=400)
+    for k in range(12):
+        filtered_ecg = scipy.signal.lfilter(butter_a, butter_b, ecg_list[k])
+        signal_length = np.size(ecg_list[k])
+        fft_k = np.fft.fft(filtered_ecg)
+        freq_k = np.fft.fftfreq(signal_length, 1 / 400)
+        resu = int(60 * np.abs(freq_k[np.argmax(np.abs(fft_k))]))
+        """converts frequency in Hz -> frequency in bpm"""
+        potential_frequencies.append(resu)
+    return max(potential_frequencies, key=potential_frequencies.count)
 
 
 def average_asynchrony(list_ecg, ecg_comparaison, plot=False):

@@ -539,10 +539,10 @@ def explain_poly_feature_influence(pathology, mono_features_list=poly_features, 
 
 
 # save files as xlsx
-for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
-    print(disease)
-    explanation = explain_poly_feature_influence(disease)
-    explanation.to_excel("affichage_ecg/poly_feature_explanation_" + disease + ".xlsx")
+#for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+#    print(disease)
+#    explanation = explain_poly_feature_influence(disease)
+#    explanation.to_excel("affichage_ecg/poly_feature_explanation_" + disease + ".xlsx")
 
 
 def save_all_mono_feature_influences_dnn():
@@ -585,8 +585,16 @@ save_all_mono_feature_influences_gold()
 save_all_poly_feature_influences_gold()
 """
 
-# print(ft.asynchrony(table_ecg[10, 2:4], plot=True))
+plot_mono_feature_influence_dnn(ft.frequencies_via_fft, max_range=0.2, save=0)
 
+plot_mono_feature_influence_gold(ft.frequencies_via_fft, max_range=0.2, save=0)
+
+#plot_poly_feature_influence_dnn(ft.frequency_via_fft, max_range=0.2, save=0)
+
+#plot_poly_feature_influence_gold(ft.frequency_via_fft, max_range=0.2, save=0)
+
+
+# print(ft.asynchrony(table_ecg[10, 2:4], plot=True))
 
 # plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=340),
 #                                name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
