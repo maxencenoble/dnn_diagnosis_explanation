@@ -380,12 +380,14 @@ def save_all_poly_feature_influences_gold():
     return 0
 
 
-save_all_mono_feature_influences_dnn()
-save_all_poly_feature_influences_dnn()
+#save_all_mono_feature_influences_dnn()
+#save_all_poly_feature_influences_dnn()
 
-save_all_mono_feature_influences_gold()
-save_all_poly_feature_influences_gold()
+#save_all_mono_feature_influences_gold()
+#save_all_poly_feature_influences_gold()
 
+plot_mono_feature_influence_dnn(ft.auto_correlation,save=0)
+plot_mono_feature_influence_gold(ft.auto_correlation,save=0)
 
 """Saving the influence rankings as Excel files"""
 

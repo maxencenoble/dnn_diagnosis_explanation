@@ -85,11 +85,14 @@ def frequencies_via_fft(ecg):
     freq = np.fft.fftfreq(signal_length, 1 / 400)
     return int(60*np.abs(freq[np.argmax(np.abs(fft))]))  # the number of steps
 
-def auto_correlation(list_ecg):
-    """Computes the auto_correlation of an ecg lead with the lag corresponding to the heartbeat frequency"""
-    lag = periods_via_fft(list_ecg)
-    return np.correlate(list_ecg, list_ecg, "same")[lag]
+def correlation(x,y,tau):
+    xx = np.append(x[tau:],np.zeros(tau))
+    return np.sum(xx*np.conjugate(y))
 
+def auto_correlation(ecg):
+    """Computes the auto_correlation of an ecg lead with the lag corresponding to the heartbeat frequency"""
+    lag = periods_via_fft(ecg)
+    return correlation(ecg,ecg,lag)
 
 """Poly-features : functions which take all tracing as an (12,_) np.array and return a single float"""
 
