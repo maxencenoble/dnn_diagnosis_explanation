@@ -92,7 +92,7 @@ def correlation(x,y,tau):
 def auto_correlation(ecg):
     """Computes the auto_correlation of an ecg lead with the lag corresponding to the heartbeat frequency"""
     lag = periods_via_fft(ecg)
-    return correlation(ecg,ecg,lag)
+    return correlation(ecg,ecg,lag)/np.sum(ecg*ecg)
 
 """Poly-features : functions which take all tracing as an (12,_) np.array and return a single float"""
 
