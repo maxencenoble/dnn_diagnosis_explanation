@@ -352,9 +352,10 @@ mono_features = [ft.average, ft.standard_deviation, ft.median_absolute_value, ft
                  ft.signal_magnitude_area, ft.energy, ft.interquartile_range, ft.entropy,
                  ft.kurtosis, ft.skewness, ft.periods_via_fft, ft.frequencies_via_fft, ft.auto_correlation]
 poly_features = [ft.average_mean, ft.average_std, ft.average_skewness, ft.average_kurtosis]
-
+mono_features = [ft.frequencies_via_fft, ft.auto_correlation]
 
 """Saving all the tracings"""
+
 
 def save_all_mono_feature_influences_dnn():
     for feat in mono_features:
@@ -380,14 +381,14 @@ def save_all_poly_feature_influences_gold():
     return 0
 
 
-#save_all_mono_feature_influences_dnn()
-#save_all_poly_feature_influences_dnn()
+# save_all_mono_feature_influences_dnn()
+# save_all_poly_feature_influences_dnn()
 
-#save_all_mono_feature_influences_gold()
-#save_all_poly_feature_influences_gold()
+# save_all_mono_feature_influences_gold()
+# save_all_poly_feature_influences_gold()
 
-plot_mono_feature_influence_dnn(ft.auto_correlation,save=1)
-plot_mono_feature_influence_gold(ft.auto_correlation,save=1)
+# plot_mono_feature_influence_dnn(ft.auto_correlation,save=1)
+# plot_mono_feature_influence_gold(ft.auto_correlation,save=1)
 
 """Saving the influence rankings as Excel files"""
 
@@ -484,10 +485,10 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
 
 
 # save files as xlsx
-# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
-#    print(disease)
-#    explanation = explain_mono_feature_influence(disease)
-#    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + ".xlsx")
+for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+    print(disease)
+    explanation = explain_mono_feature_influence(disease)
+    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + "_2.xlsx")
 
 
 def explain_poly_feature_influence(pathology, mono_features_list=poly_features, tau_lim=0.7):
