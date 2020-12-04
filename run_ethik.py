@@ -386,6 +386,7 @@ def save_all_poly_feature_influences_gold(poly_features_list=poly_features):
 # save_all_mono_feature_influences_gold()
 # save_all_poly_feature_influences_gold()
 
+
 """Most recent functions (not yet printed) : """
 
 new_mono_features = [ft.range, ft.mid_range, ft.median, ft.midhinge, ft.trimean, ft.gm_asymetry, ft.gm_asymetry2]
@@ -426,6 +427,10 @@ plot_mono_feature_influence_gold(ft.interpercentile_range(0,50,normalize=True),n
 plot_mono_feature_influence_dnn(ft.interpercentile_range(50,100,normalize=True),name_of_function='normalized_interpercentile_range_50%_100%',save=1)
 plot_mono_feature_influence_gold(ft.interpercentile_range(50,100,normalize=True),name_of_function='normalized_interpercentile_range_50%_100%',save=1)
 """
+
+
+# plot_mono_feature_influence_dnn(ft.auto_correlation,save=1)
+# plot_mono_feature_influence_gold(ft.auto_correlation,save=1)
 
 
 """Saving the influence rankings as Excel files"""
@@ -523,10 +528,10 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
 
 
 # save files as xlsx
-# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
-#    print(disease)
-#    explanation = explain_mono_feature_influence(disease)
-#    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + ".xlsx")
+for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+    print(disease)
+    explanation = explain_mono_feature_influence(disease)
+    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + "_2.xlsx")
 
 
 def explain_poly_feature_influence(pathology, mono_features_list=poly_features, tau_lim=0.7):
