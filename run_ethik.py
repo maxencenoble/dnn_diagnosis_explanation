@@ -349,34 +349,33 @@ def plot_poly_feature_influence_gold(
 
 
 mono_features = [ft.average, ft.standard_deviation, ft.median_absolute_value, ft.maximum, ft.minimum,
-                 ft.signal_magnitude_area, ft.energy, ft.interquartile_range, ft.entropy,
+                 ft.signal_magnitude_area, ft.energy, ft.entropy,
                  ft.kurtosis, ft.skewness, ft.periods_via_fft, ft.frequencies_via_fft, ft.auto_correlation]
 poly_features = [ft.average_mean, ft.average_std, ft.average_skewness, ft.average_kurtosis]
-mono_features = [ft.frequencies_via_fft, ft.auto_correlation]
 
 """Saving all the tracings"""
 
 
-def save_all_mono_feature_influences_dnn():
-    for feat in mono_features:
+def save_all_mono_feature_influences_dnn(mono_features_list=mono_features):
+    for feat in mono_features_list:
         plot_mono_feature_influence_dnn(feat, save=1)
     return 0
 
 
-def save_all_poly_feature_influences_dnn():
-    for feat in poly_features:
+def save_all_poly_feature_influences_dnn(poly_features_list=poly_features):
+    for feat in poly_features_list:
         plot_poly_feature_influence_dnn(feat, save=1)
     return 0
 
 
-def save_all_mono_feature_influences_gold():
-    for feat in mono_features:
+def save_all_mono_feature_influences_gold(mono_features_list=mono_features):
+    for feat in mono_features_list:
         plot_mono_feature_influence_gold(feat, save=1)
     return 0
 
 
-def save_all_poly_feature_influences_gold():
-    for feat in poly_features:
+def save_all_poly_feature_influences_gold(poly_features_list=poly_features):
+    for feat in poly_features_list:
         plot_poly_feature_influence_gold(feat, save=1)
     return 0
 
@@ -387,8 +386,52 @@ def save_all_poly_feature_influences_gold():
 # save_all_mono_feature_influences_gold()
 # save_all_poly_feature_influences_gold()
 
+
+"""Most recent functions (not yet printed) : """
+
+new_mono_features = [ft.range, ft.mid_range, ft.median, ft.midhinge, ft.trimean, ft.gm_asymetry, ft.gm_asymetry2]
+
+"""
+save_all_mono_feature_influences_dnn(new_mono_features)
+save_all_mono_feature_influences_gold(new_mono_features)
+
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(10,90),name_of_function='interpercentile_range_10%_90%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(10,90),name_of_function='interpercentile_range_10%_90%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(25,75),name_of_function='interpercentile_range_25%_75%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(25,75),name_of_function='interpercentile_range_25%_75%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(40,60),name_of_function='interpercentile_range_40%_60%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(40,60),name_of_function='interpercentile_range_40%_60%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(0,50),name_of_function='interpercentile_range_0%_50%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(0,50),name_of_function='interpercentile_range_0%_50%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(50,100),name_of_function='interpercentile_range_50%_100%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(50,100),name_of_function='interpercentile_range_50%_100%',save=1)
+
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(10,90,normalize=True),name_of_function='normalized_interpercentile_range_10%_90%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(10,90,normalize=True),name_of_function='normalized_interpercentile_range_10%_90%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(25,75,normalize=True),name_of_function='normalized_interpercentile_range_25%_75%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(25,75,normalize=True),name_of_function='normalized_interpercentile_range_25%_75%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(40,60,normalize=True),name_of_function='normalized_interpercentile_range_40%_60%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(40,60,normalize=True),name_of_function='normalized_interpercentile_range_40%_60%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(0,50,normalize=True),name_of_function='normalized_interpercentile_range_0%_50%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(0,50,normalize=True),name_of_function='normalized_interpercentile_range_0%_50%',save=1)
+
+plot_mono_feature_influence_dnn(ft.interpercentile_range(50,100,normalize=True),name_of_function='normalized_interpercentile_range_50%_100%',save=1)
+plot_mono_feature_influence_gold(ft.interpercentile_range(50,100,normalize=True),name_of_function='normalized_interpercentile_range_50%_100%',save=1)
+"""
+
+
 # plot_mono_feature_influence_dnn(ft.auto_correlation,save=1)
 # plot_mono_feature_influence_gold(ft.auto_correlation,save=1)
+
 
 """Saving the influence rankings as Excel files"""
 

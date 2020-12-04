@@ -11,7 +11,6 @@ import read_ecg as re
 
 """This file is for implementing all feature functions"""
 
-
 """Mono-features : functions which take a single tracing as an np.array and return a single float"""
 
 
@@ -21,6 +20,10 @@ def average(list_ecg):
 
 def standard_deviation(list_ecg):
     return np.std(list_ecg)
+
+
+def median(list_ecg):
+    return np.median(list_ecg)
 
 
 def median_absolute_value(list_ecg):
@@ -39,13 +42,60 @@ def signal_magnitude_area(list_ecg):
     return np.sum(list_ecg)
 
 
+def range(ecg):
+    return np.amax(ecg) - np.amin(ecg)
+
+
+def mid_range(ecg):
+    return (np.amax(ecg) - np.amin(ecg)) / 2
+
+
 def energy(list_ecg):
     return np.sum(list_ecg * list_ecg) / len(list_ecg)
 
 
-def interquartile_range(list_ecg):
-    q75, q25 = np.percentile(list_ecg, [75, 25])
-    return q75 - q25
+def midhinge(list_ecg):
+    q25, q75 = np.percentile(list_ecg, [25, 75])
+    return (q25 + q75) / 2
+
+
+def trimean(list_ecg):
+    q25, q50, q75 = np.percentile(list_ecg, [25, 50, 75])
+    return (q25 + 2 * q50 + q75) / 4
+
+
+def interpercentile_range(x1=25, x2=75, normalize=False):
+    """returns a lambda function which calculates the gap between percentile x2 and percentile x1 of the ecg,
+    divided by the range of the ecg on normalize=True"""
+    if normalize:
+        return lambda ecg: (np.percentile(ecg, [x2])[0] - np.percentile(ecg, [x1])[0]) / (np.amax(ecg) - np.amin(ecg))
+    else:
+        return lambda ecg: np.percentile(ecg, [x2])[0] - np.percentile(ecg, [x1])[0]
+
+
+def gm_asymetry(ecg):
+    """Returns the highest value, the supremum"""
+    percentiles = np.arange(start=60, stop=100, step=3)
+    values = []
+    for u in percentiles:
+        qu, q50, q1_u = np.percentile(ecg, [u, 50, (100 - u)])
+        values.append((qu + q1_u - 2 * q50) / (qu - q1_u))
+    return max(values)
+
+
+def gm_asymetry2(ecg):
+    """Returns the most extreme value, supremum or infimum"""
+    percentiles = np.arange(start=60, stop=100, step=3)
+    values = []
+    for u in percentiles:
+        qu, q50, q1_u = np.percentile(ecg, [u, 50, (100 - u)])
+        values.append((qu + q1_u - 2 * q50) / (qu - q1_u))
+    mini = np.min(values)
+    maxi = np.min(values)
+    if np.abs(mini) > np.abs(maxi):
+        return mini
+    else:
+        return maxi
 
 
 def entropy(list_ecg, numbins=100, base=None):
@@ -83,16 +133,19 @@ def frequencies_via_fft(ecg):
     signal_length = np.size(ecg)
     fft = np.fft.fft(filtered_ecg)
     freq = np.fft.fftfreq(signal_length, 1 / 400)
-    return int(60*np.abs(freq[np.argmax(np.abs(fft))]))  # the number of steps
+    return int(60 * np.abs(freq[np.argmax(np.abs(fft))]))  # the number of steps
 
-def correlation(x,y,tau):
-    xx = np.append(x[tau:],np.zeros(tau))
-    return np.sum(xx*np.conjugate(y))
+
+def correlation(x, y, tau):
+    xx = np.append(x[tau:], np.zeros(tau))
+    return np.sum(xx * np.conjugate(y))
+
 
 def auto_correlation(ecg):
     """Computes the auto_correlation of an ecg lead with the lag corresponding to the heartbeat frequency"""
     lag = periods_via_fft(ecg)
-    return correlation(ecg,ecg,lag)/np.sum(ecg*ecg)
+    return correlation(ecg, ecg, lag) / np.sum(ecg * ecg)
+
 
 """Poly-features : functions which take all tracing as an (12,_) np.array and return a single float"""
 
