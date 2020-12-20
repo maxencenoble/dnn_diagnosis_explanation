@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import sklearn.decomposition as sdec
 
 import utils.illustration as uil
-import read_ecg
+import utils_ecg.read_ecg as read_ecg
 
 LEN = 4096
 NB_PATIENT = 827
-TRACINGS_FILE = "./data/ecg_tracings.hdf5"
+TRACINGS_FILE = "./dnn_files/data/ecg_tracings.hdf5"
 CMAP = plt.get_cmap("Set1")
 DISEASE_LIST = ["1dAVb", "RBBB", "LBBB", "SB", "AF", "ST"]
 DISEASE_DIC = {0: "Non malade",
@@ -32,16 +32,19 @@ DIC_SIZE_WAVELET = {0: 140,
                     4: 1033,
                     5: 2054}
 
-ANNOTATIONS_CSV = np.genfromtxt("./data/annotations/dnn.csv", delimiter=',')[1:, 1:]
-ANNOTATIONS_CSV_pd = pd.read_csv("./data/annotations/dnn.csv", delimiter=',')
+ANNOTATIONS_CSV = np.genfromtxt("./dnn_files/data/annotations/dnn.csv", delimiter=',')[1:, 1:]
+ANNOTATIONS_CSV_pd = pd.read_csv("./dnn_files/data/annotations/dnn.csv", delimiter=',')
 
-# lecture de tout le fichier
+# reading all the file
 with h5py.File(TRACINGS_FILE, "r") as f:
     TABLE_ECG = np.array(f['tracings'])
 
+"""Below are useful functions to extract wavelet coefficients from ECG data or to rebuild the signal"""
+
 
 def get_coeff_multi_level(ecg, sigma_threshold=1., type_threshold='hard', family='sym7', level=5):
-    """Returns : list of arrays"""
+    """Returns the list of coefficients from the decomposition of the ECG obtained with the parameters.
+    (list of arrays)"""
     coeffs = pywt.wavedec(ecg, family, level=level)
     thresh = sigma_threshold * np.sqrt(2 * np.log(LEN))
     for i in range(1, len(coeffs)):
@@ -50,11 +53,13 @@ def get_coeff_multi_level(ecg, sigma_threshold=1., type_threshold='hard', family
 
 
 def reconstruct_signal(coeffsth, family='sym7'):
-    """Returns : np.array """
+    """Returns the ECG obtained with a list of coefficients with same size as get_coeff_multi_level(...,family=family,...)
+     (array) """
     return pywt.waverec(coeffsth, family)
 
 
 def error(real_ecg, rec_ecg):
+    """Returns the quadratic error between two ECG"""
     return np.mean((real_ecg - rec_ecg) * (real_ecg - rec_ecg))
 
 
@@ -64,9 +69,17 @@ def get_indices_list_above_threshold(type_ecg=0,
                                      type_threshold='hard',
                                      family='sym7',
                                      level=5):
-    """ Returns the indices of the coeffs with avg(abs)>threshold
-    format : list of arrays (coeffs)
-             list of arrays (names)
+    """ Function used on all the ECGS.
+
+    Returns the indexes of the coefficients obtained from decomposition with parameters where:
+        - MEAN(ABS(coeff))_{all the ECGs} >threshold
+
+    Shape : list of arrays (coeffs)
+            list of arrays (corresponding names) :
+                - e : for type of ecg (0,...11)
+                - l : for level (coefficient wavelet)
+                - c : for index (coefficient wavelet)
+                - sc : for index (coefficient scaling)
     """
     all_coeffs = np.array(
         [get_coeff_multi_level(TABLE_ECG[patient_id, :, type_ecg], sigma_threshold, type_threshold, family,
@@ -84,9 +97,10 @@ def get_indices_list_above_threshold(type_ecg=0,
 
 def from_array_coeffs_to_coeffs_with_zeros(array_coeffs, liste_indices_non_zero):
     """ Returns the list of wavelet coeffs with threshold applied :
-        - array_coeffs = np.array(140 + taille coeffs non nuls ecg après threshold)
-        - liste_indices_non_zero = obtenu avec get_indices_list_above threshold
-    format : list of arrays
+    Parameters:
+        - array_coeffs = np.array(140 + size of non zero coeffs after threshold)
+        - liste_indices_non_zero = obtained with get_indices_list_above_threshold
+    Shape : list of arrays
     """
     coeffs_wavelet = []
     coeffs_wavelet.append(array_coeffs[:DIC_SIZE_WAVELET[0]])
@@ -105,12 +119,18 @@ def from_ecg_to_array_coeffs(ecg,
                              type_threshold='hard',
                              family='sym7',
                              level=5):
-    """liste_indices_non_zero obtenu avec get_indices_list_above_threshold[0]"""
+    """ Returns the array of coefficients which finally represent the ECG
+    Parameter:
+        - liste_indices_non_zero : obtained with get_indices_list_above_threshold[0]
+    Shape : array"""
     coeffs = get_coeff_multi_level(ecg, sigma_threshold, type_threshold, family, level=level)
     all_coeffs = [coeffs[0]]
     for i in range(1, 6):
         all_coeffs.append(coeffs[i][liste_indices_non_zero[i - 1]])
     return np.concatenate(all_coeffs)
+
+
+"""How to get final coefficient data from ECG data ? -> turn_ecg_into_coeffs """
 
 
 def turn_ecg_into_coeffs(type_disease,
@@ -120,11 +140,17 @@ def turn_ecg_into_coeffs(type_disease,
                          family='sym7',
                          level=5
                          ):
-    """Returns :
-    - data : array (827 x nb_coeffs_selected per type ECG with concatenation)
-    - target : array 827 (label de type_disease)
-    - feature_names : array (len : sum nb_coeffs_selected all type ECG)
-    - target_names : array (len : 2)"""
+    """Returns the data from ECG through a transformation into coefficients
+
+    Parameters:
+        - type_disease (str) : 1dAVb, RBBB,...
+
+    Shape : dictionary
+        - data : array (827 x nb_coeffs_selected per type ECG with concatenation of the 12 ECG)
+        - target : array 827 (label from type_disease annotation)
+        - feature_names : array (names of the coefficients, len : sum nb_coeffs_selected all type ECG)
+        - target_names : array (matching with target, len : 2)
+    """
 
     liste_all_names = []
     liste_coeffs_features = [[] for i in range(NB_PATIENT)]
@@ -160,6 +186,15 @@ def turn_ecg_into_coeffs(type_disease,
 
 
 def turn_coeffs_into_ecg(res_coeffs, family='sym7'):
+    """Returns the data from coefficients through a transformation into ECG
+
+    Parameters:
+        - res_coeffs : dictionary with same shape as turn_ecg_into_coeffs(... , family=family,...)
+
+    Returns :
+    array (827,4096,12)
+
+    """
     list_nb_coeffs = res_coeffs['nb_coeffs_per_type_ecg']
     all_coeffs = res_coeffs['data']
     list_non_zero = res_coeffs['liste_indices_non_zero_0_per_type_ecg']
@@ -176,28 +211,38 @@ def turn_coeffs_into_ecg(res_coeffs, family='sym7'):
     return np.array(res_signal)
 
 
-#res_coeffs = turn_ecg_into_coeffs(DISEASE_DIC[1], threshold_coeff=0.005)
-#signal = turn_coeffs_into_ecg(res_coeffs)
+"""EXAMPLE OF USE"""
 
-#coeffs = res_coeffs["data"][0]
+# res_coeffs = turn_ecg_into_coeffs(DISEASE_DIC[1], threshold_coeff=0.005)
+# signal = turn_coeffs_into_ecg(res_coeffs)
+# id_patient=30
+# coeffs = res_coeffs["data"][0]
 # print(coeffs[coeffs>0])
-#for j in range(12):
-    #plt.plot(TABLE_ECG[12, :, j], label="true")
-    #plt.plot(signal[12, :, j], label="new")
-    #plt.legend()
-    #plt.show()
+# for j in range(12):
+# plt.plot(TABLE_ECG[id_patient, :, j], label="true")
+# plt.plot(signal[id_patient, :, j], label="new")
+# plt.legend()
+# plt.show()
+
+"""PCA towards wavelet case"""
 
 
-# pca wavelet
 def pca_visualisation_wavelet(id_ecg=0,
                               family='db5',
                               level=5,
                               sigma=1.0,
                               type_threshold='hard'):
-    """Affiche plusieurs graphes:
-        - distribution du nb de coeffs non nuls (brut et taux)
-        - PCA : analyse de la variance
-        - PCA : (PC1,PC2) et (PC1,PC3) avec label"""
+    """
+    Parameters :
+        - id_ecg : int (0,...,11)
+        - classic parameters with wavelet decomposition
+
+    Plots multiple curves:
+        - distribution of quantity of non zero coeffs (rate and number)
+        - PCA : analysis of variance
+        - PCA : (PC1,PC2) et (PC1,PC3) with label
+    """
+
     ECG = TABLE_ECG[:, :, id_ecg]
     print("taille de la donnée ECG : ", np.shape(ECG))
 
@@ -260,12 +305,19 @@ def pca_visualisation_wavelet(id_ecg=0,
     plt.show()
 
 
-# pca fft
+"""PCA towards fft case"""
+
+
 def pca_visualisation_fft(id_ecg=0, sigma=1.0):
-    """Affiche plusieurs graphes:
-        - distribution du nb de coeffs non nuls (brut et taux)
-        - PCA : analyse de la variance
-        - PCA : (PC1,PC2) et (PC1,PC3) avec label"""
+    """
+    Parameters :
+        - id_ecg : int (0,...,11)
+
+    Plots multiple curves:
+        - distribution of quantity of non zero coeffs (rate and number)
+        - PCA : analysis of variance
+        - PCA : (PC1,PC2) et (PC1,PC3) with label
+    """
     ECG = TABLE_ECG[:, :, id_ecg]
     print("taille de la donnée ECG : ", np.shape(ECG))
 

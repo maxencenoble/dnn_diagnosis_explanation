@@ -1,13 +1,8 @@
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 from dtw import accelerated_dtw
 import scipy.signal
-import pandas as pd
-
-import get_ecg as ge
-import read_ecg as re
 
 """This file is for implementing all feature functions"""
 
@@ -205,14 +200,27 @@ def frequency_via_fft(ecg_list):
 
 
 def average_asynchrony(list_ecg, ecg_comparaison, plot=False):
-    """Compared to some ecg_comparaison"""
+    """
+    Parameters :
+        - list_ecg : (4096,12) corresponding
+        - ecg_comparaison : ECG to compare considering asynchrony
+
+    If plot :
+        plots meaningful curves about asynchrony
+
+    Returns: array (2,)
+        0 : average all over the 12 ECGs of the l1 difference of indexes obtained with dtw
+        1 : average all over the 12 ECGs of the l2 difference of indexes obtained with dtw
+    """
 
     d2 = ecg_comparaison.reshape(-1, 1)
-    res = 0
+    res_l1 = 0
+    res_l2 = 0
     for k in range(12):
         d1 = list_ecg[k].reshape(-1, 1)
         d, cost_matrix, acc_cost_matrix, path = accelerated_dtw(d1, d2, dist='euclidean')
-        res += np.sum((path[1] - path[0]) / 16000)
+        res_l1 += np.sum((path[1] - path[0]) / 400)
+        res_l2 += np.sum((path[1] - path[0]) * (path[1] - path[0]) / 16000)
         if plot:
             figure = plt.figure(figsize=(10, 10))
             ax1 = figure.add_subplot(2, 1, 1)
@@ -229,4 +237,4 @@ def average_asynchrony(list_ecg, ecg_comparaison, plot=False):
             ax2.legend()
 
             plt.show()
-    return res / 12
+    return np.array([res_l1 / 12, res_l2 / 12])

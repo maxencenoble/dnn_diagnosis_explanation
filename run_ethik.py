@@ -1,20 +1,15 @@
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy.stats as stats
 import pandas as pd
-import get_ecg as ge
-import read_ecg as re
+import utils_ecg.read_ecg as re
 import ethik
 import features as ft
-from ethik.cache_explainer import CacheExplainer
-from ethik.utils import set_fig_size, to_pandas
 
 explainer = ethik.ClassificationExplainer()
 
 """ Imports the DNN annotations as a dataframe """
-dnn_annotations = pd.read_csv("./data/annotations/dnn.csv")
-gold_standard = pd.read_csv("./data/annotations/gold_standard.csv")
+dnn_annotations = pd.read_csv("./dnn_files/data/annotations/dnn.csv")
+gold_standard = pd.read_csv("./dnn_files/data/annotations/gold_standard.csv")
 
 """ Imports and cleans the raw signals """
 
@@ -31,7 +26,7 @@ def has_dead_lead(lili):  # shape = (p,t)
     return verdict
 
 
-def get_clean_ecg(tracings_file="./data/ecg_tracings.hdf5"):
+def get_clean_ecg(tracings_file="./dnn_files/data/ecg_tracings.hdf5"):
     with h5py.File(tracings_file, "r") as f:
         ecg_tracings = np.swapaxes(np.array(f['tracings']), 1, 2)  # shape = (827,12,4096)
         bad_indexes = []
@@ -133,16 +128,16 @@ def plot_mono_feature_influence_dnn(
         if save:
             if name_of_function == 'default':
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_dnn.png",
+                    "results/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_dnn.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + function_name + "_" + pathology + "_dnn as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + function_name + "_" + pathology + "_dnn as png in results/ethik/" + pathology + "/")
             else:
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_dnn.png",
+                    "results/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_dnn.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + name_of_function + "_" + pathology + "_dnn as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + name_of_function + "_" + pathology + "_dnn as png in results/ethik/" + pathology + "/")
 
 
 
@@ -196,16 +191,16 @@ def plot_poly_feature_influence_dnn(
         if save:
             if name_of_function == 'default':
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_dnn.png",
+                    "results/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_dnn.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + function_name + "_" + pathology + "_dnn as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + function_name + "_" + pathology + "_dnn as png in results/ethik/" + pathology + "/")
             else:
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_dnn.png",
+                    "results/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_dnn.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + name_of_function + "_" + pathology + "_dnn as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + name_of_function + "_" + pathology + "_dnn as png in results/ethik/" + pathology + "/")
 
         else:
             fig.show()
@@ -273,16 +268,16 @@ def plot_mono_feature_influence_gold(
         if save:
             if name_of_function == 'default':
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_gold.png",
+                    "results/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_gold.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + function_name + "_" + pathology + "_gold as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + function_name + "_" + pathology + "_gold as png in results/ethik/" + pathology + "/")
             else:
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_gold.png",
+                    "results/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_gold.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + name_of_function + "_" + pathology + "_gold as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + name_of_function + "_" + pathology + "_gold as png in results/ethik/" + pathology + "/")
         else:
             fig.show()
     return 0
@@ -333,27 +328,53 @@ def plot_poly_feature_influence_gold(
         if save:
             if name_of_function == 'default':
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_gold.png",
+                    "results/ethik/" + pathology + "/influence_" + function_name + "_" + pathology + "_gold.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + function_name + "_" + pathology + "_gold as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + function_name + "_" + pathology + "_gold as png in results/ethik/" + pathology + "/")
             else:
                 fig.write_image(
-                    "affichage_ecg/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_gold.png",
+                    "results/ethik/" + pathology + "/influence_" + name_of_function + "_" + pathology + "_gold.png",
                     width=1280, height=840)
                 print(
-                    "Correctly saved: influence_" + function_name + "_" + name_of_function + "_gold as png in affichage_ecg/ethik/" + pathology + "/")
+                    "Correctly saved: influence_" + function_name + "_" + name_of_function + "_gold as png in results/ethik/" + pathology + "/")
         else:
             fig.show()
     return 0
 
 
+interpercentile_range_10_90 = ft.interpercentile_range(10, 90, normalize=True)
+interpercentile_range_25_75 = ft.interpercentile_range(25, 75, normalize=True)
+interpercentile_range_40_60 = ft.interpercentile_range(40, 60, normalize=True)
+interpercentile_range_0_50 = ft.interpercentile_range(0, 50, normalize=True)
+interpercentile_range_50_100 = ft.interpercentile_range(10, 90, normalize=True)
+
+
+def average_asynchrony_0(list_ecg):
+    """Calculates average asynchrony of the 12 ECG from one patient towards ecg10 from patient 3 (bpm : 65, no disease)"""
+    return ft.average_asynchrony(list_ecg, ecg_comparaison=table_ecg[3, 10])
+
+
+"""To save the asynchrony-feature values : takes a very long time..."""
+
+# feature_values=np.array([average_asynchrony_0(list_ecg) for list_ecg in table_ecg])
+# np.save("results/asynchrony/feature_asynchrony",feature_values)
+
 mono_features = [ft.average, ft.standard_deviation, ft.median_absolute_value, ft.maximum, ft.minimum,
-                 ft.signal_magnitude_area, ft.energy, ft.entropy,
-                 ft.kurtosis, ft.skewness, ft.periods_via_fft, ft.frequencies_via_fft, ft.auto_correlation]
+                 ft.signal_magnitude_area, ft.energy, ft.entropy, ft.kurtosis, ft.skewness, ft.range, ft.mid_range,
+                 ft.median, ft.midhinge, ft.trimean, ft.gm_asymetry, ft.gm_asymetry2, interpercentile_range_10_90,
+                 interpercentile_range_25_75, interpercentile_range_40_60, interpercentile_range_0_50,
+                 interpercentile_range_50_100, ft.frequencies_via_fft, ft.auto_correlation]
+
+mono_features_name = ["average", "standard_deviation", "median_absolute_value", "maximum", "minimum",
+                      "signal_magnitude_area", "energy", "entropy", "kurtosis", "skewness", "range", "mid_range",
+                      "median", "midhinge", "trimean", "gm_asymetry", "gm_asymetry2", "interpercentile_range_10_90",
+                      "interpercentile_range_25_75", "interpercentile_range_40_60", "interpercentile_range_0_50",
+                      "interpercentile_range_50_100", "frequencies_via_fft", "auto_correlation"]
+
 poly_features = [ft.average_mean, ft.average_std, ft.average_skewness, ft.average_kurtosis]
 
-"""Saving all the tracings"""
+"""Saving all the tracings : some names of curves could be not clear"""
 
 
 def save_all_mono_feature_influences_dnn(mono_features_list=mono_features):
@@ -386,23 +407,9 @@ def save_all_poly_feature_influences_gold(poly_features_list=poly_features):
 # save_all_mono_feature_influences_gold()
 # save_all_poly_feature_influences_gold()
 
-
-"""Most recent functions (not yet printed) : """
-
-interpercentile_range_10_90 = ft.interpercentile_range(10, 90, normalize=True)
-interpercentile_range_25_75 = ft.interpercentile_range(25, 75, normalize=True)
-interpercentile_range_40_60 = ft.interpercentile_range(40, 60, normalize=True)
-interpercentile_range_0_50 = ft.interpercentile_range(0, 50, normalize=True)
-interpercentile_range_50_100 = ft.interpercentile_range(10, 90, normalize=True)
-
-new_mono_features = [ft.range, ft.mid_range, ft.median, ft.midhinge, ft.trimean, ft.gm_asymetry, ft.gm_asymetry2,
-                     interpercentile_range_10_90, interpercentile_range_25_75, interpercentile_range_40_60,
-                     interpercentile_range_0_50, interpercentile_range_50_100]
-
 """
-save_all_mono_feature_influences_dnn(new_mono_features)
-save_all_mono_feature_influences_gold(new_mono_features)
 
+#EXAMPLES
 
 plot_mono_feature_influence_dnn(ft.interpercentile_range(10,90),name_of_function='interpercentile_range_10%_90%',save=1)
 plot_mono_feature_influence_gold(ft.interpercentile_range(10,90),name_of_function='interpercentile_range_10%_90%',save=1)
@@ -436,18 +443,21 @@ plot_mono_feature_influence_dnn(ft.interpercentile_range(50,100,normalize=True),
 plot_mono_feature_influence_gold(ft.interpercentile_range(50,100,normalize=True),name_of_function='normalized_interpercentile_range_50%_100%',save=1)
 """
 
-# plot_mono_feature_influence_dnn(ft.auto_correlation,save=1)
-# plot_mono_feature_influence_gold(ft.auto_correlation,save=1)
-
-
 """Saving the influence rankings as Excel files"""
 
 
-def average_asynchrony_0(list_ecg):
-    return ft.average_asynchrony(list_ecg, ecg_comparaison=table_ecg[0, 0])
-
-
-def explain_mono_feature_influence(pathology, mono_features_list=mono_features, tau_lim=0.7):
+def explain_mono_feature_influence(pathology, mono_features_list=mono_features,
+                                   mono_features_list_name=mono_features_name, tau_lim=0.7):
+    """Computes the values of average probability of disease towards mono_features in Excel file :
+        - not modified data according to DNN : (DNN - Avg P)
+        - not modified data according to GS : (GS - Avg P)
+        - modified data when average feature is based on quantile tau_lim :
+            - according to DNN : (DNN - Ecart relatif en +)
+            - according to GS : (GS - Ecart relatif en +)
+        - modified data when average feature is based on quantile -tau_lim :
+            - according to DNN : (DNN - Ecart relatif en -)
+            - according to GS : (GS - Ecart relatif en -)
+    """
     feature_list = []
     type_ecg = []
     proba_mean_dnn = []
@@ -456,19 +466,16 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
     proba_mean_gs = []
     proba_low_gs = []
     proba_high_gs = []
-
+    count = -1
     for feat_function in mono_features_list:
+        count += 1
         """Computes the feature values matrix"""
         feature_values = np.empty((N_patients, 12))
         for id in range(N_patients):
             feature_values[id] = np.array([feat_function(table_ecg[id][lead]) for lead in range(12)])
 
         """extracts the name of the function"""
-        function_name = str(feat_function)[10:]
-        i = 0
-        while function_name[i] != " ":
-            i += 1
-        function_name = function_name[:i]
+        function_name = mono_features_list_name[count]
 
         """Build the feature name list"""
         names = ["lead_" + str(k) for k in range(12)]
@@ -524,11 +531,11 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
     df = pd.DataFrame({"Feature": feature_list,
                        "ECG": type_ecg,
                        "DNN - Avg P": proba_mean_dnn,
-                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
                        "DNN - Ecart relatif en +" + str(tau_lim): proba_high_dnn,
+                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
                        "GS - Avg P": proba_mean_gs,
-                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
                        "GS - Ecart relatif en +" + str(tau_lim): proba_high_gs,
+                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
                        })
 
     return df.set_index(["ECG", "Feature"])
@@ -537,11 +544,21 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
 # save files as xlsx
 # for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
 #    print(disease)
-#    explanation = explain_mono_feature_influence(disease, mono_features_list=new_mono_features)
-#    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + "_3.xlsx")
+#    explanation = explain_mono_feature_influence(disease, mono_features_list=mono_features,mono_features_list_name=mono_features_name)
+#    explanation.to_excel("results/explanation/mono_feature_explanation/mono_feature_explanation_" + disease + ".xlsx")
 
 
 def explain_poly_feature_influence(pathology, poly_features_list=poly_features, tau_lim=0.7):
+    """Computes the values of average probability of disease towards poly_features in Excel file :
+        - not modified data according to DNN : (DNN - Avg P)
+        - not modified data according to GS : (GS - Avg P)
+        - modified data when average feature is based on quantile tau_lim :
+            - according to DNN : (DNN - Ecart relatif en +)
+            - according to GS : (GS - Ecart relatif en +)
+        - modified data when average feature is based on quantile -tau_lim :
+            - according to DNN : (DNN - Ecart relatif en -)
+            - according to GS : (GS - Ecart relatif en -)
+    """
     feature_list = []
     proba_mean_dnn = []
     proba_low_dnn = []
@@ -583,11 +600,11 @@ def explain_poly_feature_influence(pathology, poly_features_list=poly_features, 
             y_dnn = explanation_dnn.query(f'feature == "{feat}"')["influence"].values
             y_gold_standard = explanation_gold_standard.query(f'feature == "{feat}"')["influence"].values
             p_mean_dnn = round(y_dnn[np.where(taus == 0.)][0], 3)
-            p_high_dnn = round((y_dnn[np.where(taus == -tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
-            p_low_dnn = round((y_dnn[np.where(taus == tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_high_dnn = round((y_dnn[np.where(taus == tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_low_dnn = round((y_dnn[np.where(taus == -tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
             p_mean_gs = round(y_gold_standard[np.where(taus == 0.)][0], 3)
-            p_high_gs = round((y_gold_standard[np.where(taus == -tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
-            p_low_gs = round((y_gold_standard[np.where(taus == tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            p_high_gs = round((y_gold_standard[np.where(taus == tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            p_low_gs = round((y_gold_standard[np.where(taus == -tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
             proba_high_dnn.append(p_high_dnn)
             proba_low_dnn.append(p_low_dnn)
             proba_mean_dnn.append(p_mean_dnn)
@@ -597,17 +614,40 @@ def explain_poly_feature_influence(pathology, poly_features_list=poly_features, 
 
     df = pd.DataFrame({"Feature": feature_list,
                        "DNN - Avg P": proba_mean_dnn,
-                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
                        "DNN - Ecart relatif en +" + str(tau_lim): proba_high_dnn,
+                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
                        "GS - Avg P": proba_mean_gs,
-                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
                        "GS - Ecart relatif en +" + str(tau_lim): proba_high_gs,
+                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
                        })
 
     return df.set_index(["Feature"])
 
 
+# save files as xlsx
+# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+#    print(disease)
+#    explanation = explain_poly_feature_influence(disease, poly_features_list=poly_features)
+#    explanation.to_excel("results/explanation/poly_feature_explanation/poly_feature_explanation_" + disease + ".xlsx")
+
+"""The results of explanatiion with asynchrony are made apart since there are hard to obtain"""
+
+
 def explain_asynchrony_influence(pathology, asynchrony_values, tau_lim=0.7):
+    """Computes the values of average probability of disease towards asynchrony values in Excel file :
+        - not modified data according to DNN : (DNN - Avg P)
+        - not modified data according to GS : (GS - Avg P)
+        - modified data when average feature is based on quantile tau_lim :
+            - according to DNN : (DNN - Ecart relatif en +)
+            - according to GS : (GS - Ecart relatif en +)
+        - modified data when average feature is based on quantile -tau_lim :
+            - according to DNN : (DNN - Ecart relatif en -)
+            - according to GS : (GS - Ecart relatif en -)
+
+    Asynchrony values:
+        - asynchrony_l1 : same as MEAN(indexes_1 - indexes_2)
+        - asynchrony_l2 : same as MEAN((indexes_1 - indexes_2)**2)
+    """
     feature_list = []
     proba_mean_dnn = []
     proba_low_dnn = []
@@ -656,38 +696,20 @@ def explain_asynchrony_influence(pathology, asynchrony_values, tau_lim=0.7):
 
     df = pd.DataFrame({"Feature": feature_list,
                        "DNN - Avg P": proba_mean_dnn,
-                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
                        "DNN - Ecart relatif en +" + str(tau_lim): proba_high_dnn,
+                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
                        "GS - Avg P": proba_mean_gs,
-                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
                        "GS - Ecart relatif en +" + str(tau_lim): proba_high_gs,
+                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
                        })
 
     return df.set_index(["Feature"])
 
 
-asynchrony_values = np.load("asynchrony/feature_asynchrony.npy")
+asynchrony_values = np.load("results/asynchrony/feature_asynchrony.npy")
 print(np.shape(asynchrony_values))
 # save files as xlsx
-for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
-    print(disease)
-    explanation = explain_asynchrony_influence(disease, asynchrony_values)
-    explanation.to_excel("affichage_ecg/asynchrony_explanation_" + disease + ".xlsx")
-
-# print(ft.asynchrony(table_ecg[10, 2:4], plot=True))
-
-# plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=340),
-#                                name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
-# plot_mono_feature_influence_dnn(ft.auto_correlation_function(lag=200),
-#                                name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
-#
-# plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=340),
-#                                 name_of_function='auto correlation for a single heartbeat at 70 bpm', save=1)
-# plot_mono_feature_influence_gold(ft.auto_correlation_function(lag=200),
-#                                 name_of_function='auto correlation for a single heartbeat at 120 bpm', save=1)
-
-
-# plot_poly_feature_influence_dnn(lambda list_ecg: ft.average_asynchrony(list_ecg, ecg_comparaison=table_ecg[0, 0]),
-#                                name_of_function='asynchrony ECG 0 et 1')
-
-# print(ft.average_asynchrony(table_ecg[0], ecg_comparaison=table_ecg[0, 0]))
+# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+#    print(disease)
+#    explanation = explain_asynchrony_influence(disease, asynchrony_values)
+#    explanation.to_excel("results/explanation/asynchrony_explanation/asynchrony_explanation_" + disease + ".xlsx")
