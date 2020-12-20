@@ -389,7 +389,15 @@ def save_all_poly_feature_influences_gold(poly_features_list=poly_features):
 
 """Most recent functions (not yet printed) : """
 
-new_mono_features = [ft.range, ft.mid_range, ft.median, ft.midhinge, ft.trimean, ft.gm_asymetry, ft.gm_asymetry2]
+interpercentile_range_10_90 = ft.interpercentile_range(10, 90, normalize=True)
+interpercentile_range_25_75 = ft.interpercentile_range(25, 75, normalize=True)
+interpercentile_range_40_60 = ft.interpercentile_range(40, 60, normalize=True)
+interpercentile_range_0_50 = ft.interpercentile_range(0, 50, normalize=True)
+interpercentile_range_50_100 = ft.interpercentile_range(10, 90, normalize=True)
+
+new_mono_features = [ft.range, ft.mid_range, ft.median, ft.midhinge, ft.trimean, ft.gm_asymetry, ft.gm_asymetry2,
+                     interpercentile_range_10_90, interpercentile_range_25_75, interpercentile_range_40_60,
+                     interpercentile_range_0_50, interpercentile_range_50_100]
 
 """
 save_all_mono_feature_influences_dnn(new_mono_features)
@@ -427,7 +435,6 @@ plot_mono_feature_influence_gold(ft.interpercentile_range(0,50,normalize=True),n
 plot_mono_feature_influence_dnn(ft.interpercentile_range(50,100,normalize=True),name_of_function='normalized_interpercentile_range_50%_100%',save=1)
 plot_mono_feature_influence_gold(ft.interpercentile_range(50,100,normalize=True),name_of_function='normalized_interpercentile_range_50%_100%',save=1)
 """
-
 
 # plot_mono_feature_influence_dnn(ft.auto_correlation,save=1)
 # plot_mono_feature_influence_gold(ft.auto_correlation,save=1)
@@ -502,11 +509,11 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
             y_dnn = explanation_dnn.query(f'feature == "{feat}"')["influence"].values
             y_gold_standard = explanation_gold_standard.query(f'feature == "{feat}"')["influence"].values
             p_mean_dnn = round(y_dnn[np.where(taus == 0.)][0], 3)
-            p_high_dnn = round((y_dnn[np.where(taus == -tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
-            p_low_dnn = round((y_dnn[np.where(taus == tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_high_dnn = round((y_dnn[np.where(taus == tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_low_dnn = round((y_dnn[np.where(taus == -tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
             p_mean_gs = round(y_gold_standard[np.where(taus == 0.)][0], 3)
-            p_high_gs = round((y_gold_standard[np.where(taus == -tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
-            p_low_gs = round((y_gold_standard[np.where(taus == tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            p_high_gs = round((y_gold_standard[np.where(taus == tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            p_low_gs = round((y_gold_standard[np.where(taus == -tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
             proba_high_dnn.append(p_high_dnn)
             proba_low_dnn.append(p_low_dnn)
             proba_mean_dnn.append(p_mean_dnn)
@@ -528,13 +535,13 @@ def explain_mono_feature_influence(pathology, mono_features_list=mono_features, 
 
 
 # save files as xlsx
-for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
-    print(disease)
-    explanation = explain_mono_feature_influence(disease)
-    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + "_2.xlsx")
+# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+#    print(disease)
+#    explanation = explain_mono_feature_influence(disease, mono_features_list=new_mono_features)
+#    explanation.to_excel("affichage_ecg/mono_feature_explanation_" + disease + "_3.xlsx")
 
 
-def explain_poly_feature_influence(pathology, mono_features_list=poly_features, tau_lim=0.7):
+def explain_poly_feature_influence(pathology, poly_features_list=poly_features, tau_lim=0.7):
     feature_list = []
     proba_mean_dnn = []
     proba_low_dnn = []
@@ -543,7 +550,7 @@ def explain_poly_feature_influence(pathology, mono_features_list=poly_features, 
     proba_low_gs = []
     proba_high_gs = []
 
-    for feat_function in mono_features_list:
+    for feat_function in poly_features_list:
         """Computes the feature values matrix"""
         feature_values = np.zeros(N_patients)
         for id in range(N_patients):
@@ -599,12 +606,73 @@ def explain_poly_feature_influence(pathology, mono_features_list=poly_features, 
 
     return df.set_index(["Feature"])
 
-# save files as xlsx
-# for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
-#    print(disease)
-#    explanation = explain_poly_feature_influence(disease)
-#    explanation.to_excel("affichage_ecg/poly_feature_explanation_" + disease + ".xlsx")
 
+def explain_asynchrony_influence(pathology, asynchrony_values, tau_lim=0.7):
+    feature_list = []
+    proba_mean_dnn = []
+    proba_low_dnn = []
+    proba_high_dnn = []
+    proba_mean_gs = []
+    proba_low_gs = []
+    proba_high_gs = []
+
+    for j in [0, 1]:
+        if j == 0:
+            function_name = "asynchrony_l1"
+        else:
+            function_name = "asynchrony_l2"
+
+        """Builds the feature dataframe"""
+        series = {
+            function_name: asynchrony_values[:, j]
+        }
+        df_feature = pd.DataFrame(series)
+
+        explanation_dnn = explainer.explain_influence(
+            X_test=df_feature[function_name],
+            y_pred=dnn_annotations[pathology])
+        explanation_gold_standard = explainer.explain_influence(
+            X_test=df_feature[function_name],
+            y_pred=gold_standard[pathology])
+
+        features = explanation_dnn["feature"].unique()
+        for i, feat in enumerate(features):
+            feature_list.append(function_name)
+            taus = explanation_dnn.query(f'feature == "{feat}"')["tau"].values
+            y_dnn = explanation_dnn.query(f'feature == "{feat}"')["influence"].values
+            y_gold_standard = explanation_gold_standard.query(f'feature == "{feat}"')["influence"].values
+            p_mean_dnn = round(y_dnn[np.where(taus == 0.)][0], 3)
+            p_high_dnn = round((y_dnn[np.where(taus == tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_low_dnn = round((y_dnn[np.where(taus == -tau_lim)][0] - p_mean_dnn) / p_mean_dnn, 2)
+            p_mean_gs = round(y_gold_standard[np.where(taus == 0.)][0], 3)
+            p_high_gs = round((y_gold_standard[np.where(taus == tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            p_low_gs = round((y_gold_standard[np.where(taus == -tau_lim)][0] - p_mean_gs) / p_mean_gs, 2)
+            proba_high_dnn.append(p_high_dnn)
+            proba_low_dnn.append(p_low_dnn)
+            proba_mean_dnn.append(p_mean_dnn)
+            proba_high_gs.append(p_high_gs)
+            proba_low_gs.append(p_low_gs)
+            proba_mean_gs.append(p_mean_gs)
+
+    df = pd.DataFrame({"Feature": feature_list,
+                       "DNN - Avg P": proba_mean_dnn,
+                       "DNN - Ecart relatif en -" + str(tau_lim): proba_low_dnn,
+                       "DNN - Ecart relatif en +" + str(tau_lim): proba_high_dnn,
+                       "GS - Avg P": proba_mean_gs,
+                       "GS - Ecart relatif en -" + str(tau_lim): proba_low_gs,
+                       "GS - Ecart relatif en +" + str(tau_lim): proba_high_gs,
+                       })
+
+    return df.set_index(["Feature"])
+
+
+asynchrony_values = np.load("asynchrony/feature_asynchrony.npy")
+print(np.shape(asynchrony_values))
+# save files as xlsx
+for disease in ['1dAVb', 'RBBB', 'LBBB', 'SB', 'AF', 'ST']:
+    print(disease)
+    explanation = explain_asynchrony_influence(disease, asynchrony_values)
+    explanation.to_excel("affichage_ecg/asynchrony_explanation_" + disease + ".xlsx")
 
 # print(ft.asynchrony(table_ecg[10, 2:4], plot=True))
 
