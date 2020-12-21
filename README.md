@@ -10,6 +10,7 @@ All steps of our work and our discussion are described in our [dissertation](htt
 ## Requirements
 
 This code was tested on Python 3 and needs several specific requirements for ML models and their explanations. Check `requirements.txt`.
+The DNN is expected to work with a version of Tensorflow that is not above 1.15, but may work with an upgraded version.
 
 
 ## Data
