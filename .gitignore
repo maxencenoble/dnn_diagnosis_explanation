@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # intellij configs
-*.idea/
+.idea/
 
 # C extensions
 *.so
